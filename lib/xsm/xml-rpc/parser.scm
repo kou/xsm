@@ -111,6 +111,7 @@
 (define-class <xr-struct> (<xr-element>)
   ())
 
+;;; for struct->record version
 (define-method initialize ((self <xr-struct>) args)
   (next-method)
   (let* ((members (parse-members (contents-of self)))
@@ -120,6 +121,18 @@
     (set! (value-of self)
           (apply (record-constructor rtd names) values))))
   
+;;; for struct->hash version
+(define-method initialize ((self <xr-struct>) args)
+  (next-method)
+  (let* ((members (parse-members (contents-of self)))
+         (names (map car members))
+         (values (map cadr members))
+         (hash-table (make-hash-table 'eq?)))
+    (for-each (lambda (name value)
+                (hash-table-put! hash-table name value))
+              names
+              values)
+    (set! (value-of self) hash-table)))
 
 (define-class <xr-array> (<xr-element>)
   ())
@@ -173,6 +186,7 @@
     (errorf "must be single <params> element, but <~s>" params))
   (map parse-param (sxml:content params)))
 
+;;; for struct->record version
 (define (parse-fault fault)
   (unless (eq? 'fault (sxml:element-name fault))
     (errorf "must be single <fault> element, but <~s>" fault))
@@ -181,6 +195,16 @@
     (errorf "XML-RPC FAULT: code=~a; string=~a"
             (ref fault-info 'faultCode)
             (ref fault-info 'faultString))))
+
+;;; for struct->hash version
+(define (parse-fault fault)
+  (unless (eq? 'fault (sxml:element-name fault))
+    (errorf "must be single <fault> element, but <~s>" fault))
+  (let ((fault-info (parse-value (first-content (sxml:content fault)
+                                                identity))))
+    (errorf "XML-RPC FAULT: code=~a; string=~a"
+            (hash-table-get fault-info 'faultCode)
+            (hash-table-get fault-info 'faultString))))
 
 (define (parse-response response)
   (unless (eq? 'methodResponse (sxml:element-name response))

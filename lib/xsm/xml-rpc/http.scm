@@ -1,12 +1,13 @@
 (define-module xsm.xml-rpc.http
   (use srfi-13)
-  (use gauche.version)
-  (use gauche.charconv)
   (use text.tr)
   (use util.list)
   (use sxml.ssax)
+  (use gauche.version)
+  (use gauche.charconv)
+  (use gauche.selector)
   (use xsm.xml-rpc.parser)
-  (export http-response-parse))
+  (export http-request http-response-parse))
 (select-module xsm.xml-rpc.http)
 
 (define-class <xml-rpc-http-error> (<exception>)
@@ -146,6 +147,7 @@
               (apply format output "~a: ~a\r\n" header))
             headers)
   (format output "\r\n")
-  (format output "~a" body))
+  (format output "~a" body)
+  (flush output))
 
 (provide "xsm/xml-rpc/http")

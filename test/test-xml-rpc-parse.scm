@@ -26,7 +26,7 @@
   (every (lambda (field-info)
            (receive (name value)
                (apply values field-info)
-             (assert-equal (ref struct name) value)))
+             (assert-equal value (hash-table-get struct name))))
          field-infos))
 
 (define-assertion (assert-error-message expected thunk)
