@@ -4,7 +4,7 @@
   (use util.record)
   (use rfc.base64)
   (use sxml.tools)
-  (export parse-method-response))
+  (export parse-response))
 (select-module xsm.xml-rpc.parser)
 
 (define (first-content contents converter)
@@ -191,7 +191,7 @@
     (errorf "must be single <params> element, but <~s>" params))
   (map parse-param (sxml:content params)))
 
-;;; for struct->record version
+;;; struct->record version
 (define (parse-fault fault)
   (unless (eq? 'fault (sxml:element-name fault))
     (errorf "must be single <fault> element, but <~s>" fault))
@@ -201,7 +201,7 @@
             (ref fault-info 'faultCode)
             (ref fault-info 'faultString))))
 
-;;; for struct->hash version
+;;; struct->hash version
 (define (parse-fault fault)
   (unless (eq? 'fault (sxml:element-name fault))
     (errorf "must be single <fault> element, but <~s>" fault))
@@ -211,7 +211,7 @@
             (hash-table-get fault-info 'faultCode)
             (hash-table-get fault-info 'faultString))))
 
-(define (parse-response response)
+(define (parse-method-response response)
   (unless (eq? 'methodResponse (sxml:element-name response))
     (errorf "must be single <methodResponse> element, but <~s>" response))
   (let* ((content (first-content (sxml:content response) identity))
@@ -222,7 +222,33 @@
       (else (errorf "unknown subelement of <methodResponse>: <~a>"
                     name)))))
 
-(define (parse-method-response sxml)
-  (parse-response (first-content (sxml:content sxml) identity)))
+(define (parse-response sxml)
+  (parse-method-response (first-content (sxml:content sxml) identity)))
+
+(define (parse-request sxml)
+  (parse-method-call (first-content (sxml:content sxml) identity)))
+  
+(define (parse-method-call request)
+  (unless (eq? 'methodCall (sxml:element-name request))
+    (errorf "must be single <methodCall> element, but <~s>" request))
+  (let ((contents (sxml:content request)))
+    (unless (and (pair? contents)
+                 (pair? (cadr contents)))
+      (errorf "too small contents <~a>" contents))
+    (apply values
+           (map (lambda (content handler)
+                  (handler content))
+                contents
+                (list (lambda (content)
+                        (parse-method-name (first-content content identity)))
+                      (lambda (content)
+                        (parse-params (first-content content identity)))
+                      (lambda (content)
+                        (errorf "too many content <~a>" content)))))))
+
+(define (parse-method-name method-name)
+  (unless (eq? 'methodName (sxml:element-name method-name))
+    (errorf "must be single <methodName> element, but <~s>" method-name))
+  (first-content (sxml:content method-name) identity))
 
 (provide "xsm/xml-rpc/parser")

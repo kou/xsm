@@ -7,7 +7,8 @@
   (use gauche.charconv)
   (use gauche.selector)
   (use xsm.xml-rpc.parser)
-  (export http-request http-response-parse))
+  (export http-request http-response-parse
+          http-response http-request-parse))
 (select-module xsm.xml-rpc.http)
 
 (define-class <xml-rpc-http-error> (<exception>)
@@ -125,18 +126,11 @@
   (let ((md (#/^\s*<\?xml\s*.*\s*encoding=['\"]([^'\"]+)['\"].*\s*\?>/ str)))
     (and md (md 1))))
     
-(define (http-response-body-read input length)
-  (let* ((block (read-required-block input length
-                                     (lambda ()
-                                       (error "content is too short"))))
-         (encoding (xml-encoding (read-line (open-input-string block)))))
-    (ces-convert block encoding)))
-    
 
 (define (http-response-body-parse input length)
-  (let ((body (http-response-body-read input length)))
+  (let ((body (xml-read input length)))
     ;; (print body)
-    (parse-method-response (ssax:xml->sxml (open-input-string body) '()))))
+    (parse-response (ssax:xml->sxml (open-input-string body) '()))))
 
 (define (http-response-parse input)
   (http-response-body-parse input
@@ -150,5 +144,34 @@
   (format output "\r\n")
   (format output "~a" body)
   (flush output))
+
+(define (http-response headers body output)
+  (for-each (lambda (header)
+              (apply format output "~a: ~a\r\n" header))
+            headers)
+  (format output "\r\n")
+  (format output "~a" body)
+  (flush output))
+
+(define (http-request-parse input)
+  (unless (equal? "POST" (sys-getenv "REQUEST_METHOD"))
+    (error "405: Method Not Allowed"))
+  (unless (equal? "text/xml" (sys-getenv "CONTENT_TYPE"))
+    (error "400: Bad Request"))
+  (let ((length (x->number (sys-getenv "CONTENT_LENGTH"))))
+    (unless (< 0 length)
+      (error "411: Length Required"))
+    (http-request-body-parse input length)))
+
+(define (http-request-body-parse input length)
+  (let ((body (xml-read input length)))
+    (parse-request (ssax:xml->sxml (open-input-string body) '()))))
+
+(define (xml-read input length)
+  (let* ((block (read-required-block input length
+                                     (lambda ()
+                                       (error "content is too short"))))
+         (encoding (xml-encoding (read-line (open-input-string block)))))
+    (ces-convert block encoding)))
 
 (provide "xsm/xml-rpc/http")

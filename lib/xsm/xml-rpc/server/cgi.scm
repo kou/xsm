@@ -1,0 +1,20 @@
+(define-module xsm.xml-rpc.server.cgi
+  (extend xsm.xml-rpc.server)
+  (use xsm.xml-rpc.http)
+  (export xml-rpc-server-cgi-main))
+(select-module xsm.xml-rpc.server.cgi)
+
+(define (xml-rpc-server-cgi-main bindings)
+  (let ((mount-table (make <xml-rpc-server-mount-table>)))
+    (let loop ((bindings bindings))
+      (unless (null? bindings)
+        (apply mount mount-table (car bindings))
+        (loop (cdr bindings))))
+    (receive (name args)
+        (http-request-parse (current-input-port))
+      (let* ((body (apply handle-request mount-table name args))
+             (headers `(("Content-Type" "text/xml")
+                        ("Content-Length" ,(number->string (string-size body))))))
+        (http-response headers body (current-output-port))))))
+
+(provide "xsm/xml-rpc/server/cgi")
