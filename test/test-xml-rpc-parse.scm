@@ -30,12 +30,17 @@
          field-infos))
 
 (define-assertion (assert-error-message expected thunk)
-  (with-error-handler
-      (lambda (e)
-        (equal? expected (ref e 'message)))
-    (lambda ()
-      (thunk)
-      (fail "error wasn't occurred"))))
+  (let ((result (with-error-handler
+                    (lambda (e)
+                      (if (equal? expected (ref e 'message))
+                        #t
+                        (make-assertion-failure
+                         ((make-message-handler expected)
+                          (ref e 'message)))))
+                  (lambda ()
+                    (thunk)
+                    (fail "error wasn't occurred")))))
+    result))
 
 (define-test-case "XML-RPC parser test"
   ("parse-value test"
@@ -135,25 +140,21 @@
     '("South Dakota")
     (lambda ()
       (parse-method-response
-       (open-input-string
-        (tree->string
-         (sxml:sxml->xml
-          '(methodResponse
-            (params
-             (param
-              (value (string "South Dakota")))))))))))
+       '(*TOP*
+         (methodResponse
+          (params
+           (param
+            (value (string "South Dakota")))))))))
    (assert-error-message
     "XML-RPC FAULT: code=4; string=Too many parameters."
     (lambda ()
       (parse-method-response
-       (open-input-string
-        (tree->string
-         (sxml:sxml->xml
-          '(methodResponse
-            (fault
-             (value
-              (struct
-               (member (name "faultCode")
-                       (value (int "4")))
-               (member (name "faultString")
-                       (value (string "Too many parameters.")))))))))))))))
+       '(*TOP*
+         (methodResponse
+          (fault
+           (value
+            (struct
+             (member (name "faultCode")
+                     (value (int "4")))
+             (member (name "faultString")
+                     (value (string "Too many parameters.")))))))))))))

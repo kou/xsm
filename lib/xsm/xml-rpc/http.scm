@@ -1,8 +1,12 @@
 (define-module xsm.xml-rpc.http
   (use srfi-13)
   (use gauche.version)
+  (use gauche.charconv)
   (use text.tr)
-  (use util.list))
+  (use util.list)
+  (use sxml.ssax)
+  (use xsm.xml-rpc.parser)
+  (export http-response-parse))
 (select-module xsm.xml-rpc.http)
 
 (define-class <xml-rpc-http-error> (<exception>)
@@ -56,21 +60,21 @@
       (read-block size in)))
 
   (define (read-more-if-need block)
-    (debug (list "read body" block))
+    '(debug (list "read body" block))
     (cond ((eof-object? block) (eof-handler))
           ((< (string-size block) size)
-           (debug (list "more reading..." size (string-size block)
+           '(debug (list "more reading..." size (string-size block)
                         (- size (string-size block))))
            (read-more-if-need
             (string-append block
                            (more-read (- size (string-size block))))))
           (else
-           (debug (list "got block" block))
+           '(debug (list "got block" block))
            block)))
     
   (read-more-if-need (more-read size)))
 
-(define (http-header-read input)
+(define (http-response-header-read input)
   (define counter 3)
   (define (next-line)
     (read-with-timeout input read-line (list 10 0)
@@ -105,8 +109,8 @@
                        result)
                  (next-line))))))
 
-(define (http-header-parse input)
-  (let* ((alist (http-header-read input))
+(define (http-response-header-parse input)
+  (let* ((alist (http-response-header-read input))
          (content-type (assoc-ref alist "CONTENT_TYPE"))
          (content-length (assoc-ref alist "CONTENT_LENGTH")))
     (unless (equal? "text/xml" content-type)
@@ -115,5 +119,33 @@
       (raise (make <invalid-content-length> :content-length content-length)))
 
     (string->number content-length)))
+
+(define (xml-encoding str)
+  (let ((md (#/^\s*<\?xml\s*.*\s*encoding=['\"]([^'\"]+)['\"].*\s*\?>/ str)))
+    (and md (md 1))))
     
+(define (http-response-body-read input length)
+  (let* ((block (read-required-block input length
+                                     (lambda ()
+                                       (error "content is too short"))))
+         (encoding (xml-encoding (read-line (open-input-string block)))))
+    (ces-convert block encoding)))
+    
+
+(define (http-response-body-parse input length)
+  (let ((body (http-response-body-read input length)))
+    (parse-method-response (ssax:xml->sxml (open-input-string body) '()))))
+
+(define (http-response-parse input)
+  (http-response-body-parse input
+                            (http-response-header-parse input)))
+
+(define (http-request path headers body output)
+  (format output "POST ~a HTTP/1.1\r\n" path)
+  (for-each (lambda (header)
+              (apply format output "~a: ~a\r\n" header))
+            headers)
+  (format output "\r\n")
+  (format output "~a" body))
+
 (provide "xsm/xml-rpc/http")

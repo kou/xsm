@@ -3,8 +3,8 @@
   (use srfi-19)
   (use util.record)
   (use rfc.base64)
-  (use sxml.ssax)
-  (use sxml.tools))
+  (use sxml.tools)
+  (export parse-method-response))
 (select-module xsm.xml-rpc.parser)
 
 (define (first-content contents converter)
@@ -193,9 +193,7 @@
       (else (errorf "unknown subelement of <methodResponse>: <~a>"
                     name)))))
 
-(define (parse-method-response in)
-  (parse-response (first-content (sxml:content (ssax:xml->sxml in '()))
-                                 identity)))
-  
-  
+(define (parse-method-response sxml)
+  (parse-response (first-content (sxml:content sxml) identity)))
+
 (provide "xsm/xml-rpc/parser")
