@@ -20,7 +20,7 @@ GPL or BSD License
 
 == なにこれ？
 
-GaucheのためのXML-RPCクライアントライブラリです．
+GaucheのためのXML-RPCライブラリです．
 
 以下のような機能はありません．
 
@@ -38,7 +38,7 @@ GaucheのためのXML-RPCクライアントライブラリです．
 
 == 使い方
 
-sample/calc_client.scmを見てください．
+sample/calc_{client,cgi,phttpd}.scmあたりを見てください．
 
 == マッピング
 
