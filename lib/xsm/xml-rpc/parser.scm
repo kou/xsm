@@ -165,7 +165,12 @@
 (define (parse-value value)
   (unless (eq? 'value (sxml:element-name value))
     (errorf "must be single <value> element, but <~s>" value))
-  (let* ((content (first-content (sxml:content value) identity))
+  (let* ((content (sxml:content value))
+         (content (if (or (null? content)
+                          (and (pair? (car content))
+                               (null? (cdar content))))
+                    "" ;; is it good?
+                    (first-content content identity)))
          (name (sxml:element-name content))
          (klass (if name
                   (eval (string->symbol #`"<xr-,|name|>")

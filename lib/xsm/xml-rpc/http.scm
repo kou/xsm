@@ -135,6 +135,7 @@
 
 (define (http-response-body-parse input length)
   (let ((body (http-response-body-read input length)))
+    ;; (print body)
     (parse-method-response (ssax:xml->sxml (open-input-string body) '()))))
 
 (define (http-response-parse input)

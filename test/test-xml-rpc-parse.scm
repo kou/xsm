@@ -5,6 +5,7 @@
   (use srfi-19)
   (use rfc.base64)
   (use test.unit)
+  (use sxml.ssax)
   (use sxml.tools)
   (use text.tree)
   (extend xsm.xml-rpc.parser))
@@ -54,6 +55,8 @@
 
    (assert-equal "abc" (parse-value '(value (string "abc"))))
    (assert-equal "abc" (parse-value '(value "abc")))
+   (assert-equal "" (parse-value '(value (string))))
+   (assert-equal "" (parse-value '(value)))
 
    (assert-equal 1.0 (parse-value '(value (double "1"))))
    (assert-equal -3.14 (parse-value '(value (double "-3.14"))))
@@ -72,11 +75,11 @@
                                                        (value (string "abc")))
                                                (member (name "c")
                                                        (value (double "1.0")))))))
-   (assert-equal '#(1 "abc" -1.0)
+   (assert-equal '(1 "abc" -1.0)
                  (parse-value '(value (array (data (value (int "1"))
                                                    (value (string "abc"))
                                                    (value (double "-1.0")))))))
-   (assert-equal '#(1 #("abc" -1.0))
+   (assert-equal '(1 ("abc" -1.0))
                  (parse-value
                   '(value
                     (array
@@ -157,4 +160,49 @@
              (member (name "faultCode")
                      (value (int "4")))
              (member (name "faultString")
-                     (value (string "Too many parameters.")))))))))))))
+                     (value (string "Too many parameters.")))))))))))
+   (assert-struct
+    '((mode 2) (players (1 2 3)) (width 17) (height 21) (turn_id "1") (cur_player "2") (next_turn ""))
+    (parse-method-response
+     (ssax:xml->sxml
+      (open-input-string "<?xml version=\"1.0\"?>
+<!-- DEBUG INFO:
+
+
+
+-->
+<methodResponse>
+<params>
+<param>
+<value><struct>
+<member><name>mode</name>
+<value><int>2</int></value>
+</member>
+<member><name>players</name>
+<value><array>
+<data>
+<value><int>1</int></value>
+<value><int>2</int></value>
+<value><int>3</int></value>
+</data>
+</array></value>
+</member>
+<member><name>width</name>
+<value><int>17</int></value>
+</member>
+<member><name>height</name>
+<value><int>21</int></value>
+</member>
+<member><name>turn_id</name>
+<value><string>1</string></value>
+</member>
+<member><name>cur_player</name>
+<value><string>2</string></value>
+</member>
+<member><name>next_turn</name>
+<value><string></string></value>
+</member>
+</struct></value>
+</param>
+</params>
+</methodResponse>") '())))))
