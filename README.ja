@@ -71,4 +71,4 @@ XML-RPCでの型と，Scheme上での型（クラス）を以下のようにマッ
    ((|<hash-table>|))
 
 : array
-   ((|<vector>|))
+   ((|<list>|))

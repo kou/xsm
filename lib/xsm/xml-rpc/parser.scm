@@ -145,7 +145,7 @@
                    (data (car data))
                    (eq? 'data (sxml:element-name data)))
           (set! (value-of self)
-                (list->vector (map parse-value (sxml:content data)))))
+                (map parse-value (sxml:content data))))
         (errorf "subelement of <array> is must be one <data> element, but <~a>"
                 data))))
 

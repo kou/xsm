@@ -44,7 +44,7 @@
                                        prev))
                                '())))
 
-(define-method marshal-value ((value <vector>))
+(define-method marshal-value ((value <sequence>))
   (make-value 'array
               (list (cons 'data
                           (reverse! (fold (lambda (val prev)

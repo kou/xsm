@@ -96,7 +96,10 @@
 (define (entag tag attrs content)
   (if (null? content)
     (list #\< tag attrs "/>")
-    (list #\< tag attrs #\> content "</" tag #\>)))
+    (list (if (eq? tag 'methodName) ;; bug for PHP
+            " "
+            "")
+          #\< tag attrs #\> content "</" tag #\>)))
 
 (define (make-request name . args)
   (call-with-output-string
