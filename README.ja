@@ -4,46 +4,46 @@
 
 $Id$
 
-== $B:n<T(B
+== ºî¼Ô
 
 Kouhei Sutou <kou@cozmixng.org>
 
-== $B%i%$%;%s%9(B
+== ¥é¥¤¥»¥ó¥¹
 
 GPL or BSD License
 
-== $B%a!<%j%s%0%j%9%H(B
+== ¥á¡¼¥ê¥ó¥°¥ê¥¹¥È
 
-((<COZMIXNG RWiki - $BO"Mm@h(B
+((<COZMIXNG RWiki - Ï¢ÍíÀè
 |URL:http://www.cozmixng.org/~rwiki/?cmd=view;name=%CF%A2%CD%ED%C0%E8>))
-$B$r8fMw2<$5$$!%(B
+¤ò¸æÍ÷²¼¤µ¤¤¡¥
 
-== $B$J$K$3$l!)(B
+== ¤Ê¤Ë¤³¤ì¡©
 
-XML-RPC$B%/%i%$%"%s%H%i%$%V%i%j$G$9!%(B
+Gauche¤Î¤¿¤á¤ÎXML-RPC¥¯¥é¥¤¥¢¥ó¥È¥é¥¤¥Ö¥é¥ê¤Ç¤¹¡¥
 
-$B0J2<$N$h$&$J5!G=$O$"$j$^$;$s!%(B
+°Ê²¼¤Î¤è¤¦¤Êµ¡Ç½¤Ï¤¢¤ê¤Þ¤»¤ó¡¥
 
-  * multiCall$B$H$+$$$m$$$m(B
+  * multiCall¤È¤«¤¤¤í¤¤¤í
 
-== $BF~<jJ}K!(B
+== Æþ¼êÊýË¡
 
 ((<URL:http://www.cozmixng.org/~kou/download/xsm.tar.gz>))
 
   % svn co http://www.cozmixng.org/repos/gauche/xsm/trunk xsm
 
-== $B%$%s%9%H!<%k(B
+== ¥¤¥ó¥¹¥È¡¼¥ë
 
   # gosh install/install.scm
 
-== $B;H$$J}(B
+== »È¤¤Êý
 
-sample/calc_client.scm$B$r8+$F$/$@$5$$!%(B
+sample/calc_client.scm¤ò¸«¤Æ¤¯¤À¤µ¤¤¡¥
 
-== $B%^%C%T%s%0(B
+== ¥Þ¥Ã¥Ô¥ó¥°
 
-XML-RPC$B$G$N7?$H!$(BScheme$B>e$G$N7?!J%/%i%9!K$r0J2<$N$h$&$K%^%C(B
-$B%T%s%0$7$^$9!%(B
+XML-RPC¤Ç¤Î·¿¤È¡¤Scheme¾å¤Ç¤Î·¿¡Ê¥¯¥é¥¹¡Ë¤ò°Ê²¼¤Î¤è¤¦¤Ë¥Þ¥Ã
+¥Ô¥ó¥°¤·¤Þ¤¹¡¥
 
 : int
    ((|<integer>|))
@@ -63,9 +63,9 @@ XML-RPC$B$G$N7?$H!$(BScheme$B>e$G$N7?!J%/%i%9!K$r0J2<$N$h$&$K%^%C(B
 : base64
    ((|<string>|))
    
-   Scheme$B$N%*%V%8%'%/%H$r(BXML-RPC$B$N(Bbase64$B7?$H$9$k>l9g$O!$(B
-   (({make-base64-encoded-string}))$B<jB3$-$r;H$C$F!$J8;zNs$r(B
-   ((|<base64>|))$B7?$KJQ49$7$F$/$@$5$$!%(B
+   Scheme¤Î¥ª¥Ö¥¸¥§¥¯¥È¤òXML-RPC¤Îbase64·¿¤È¤¹¤ë¾ì¹ç¤Ï¡¤
+   (({make-base64-encoded-string}))¼êÂ³¤­¤ò»È¤Ã¤Æ¡¤Ê¸»úÎó¤ò
+   ((|<base64>|))·¿¤ËÊÑ´¹¤·¤Æ¤¯¤À¤µ¤¤¡¥
 
 : struct
    ((|<hash-table>|))

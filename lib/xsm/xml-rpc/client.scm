@@ -119,8 +119,8 @@
          (in (socket-input-port socket))
          (out (socket-output-port socket))
          (body (apply make-request name args))
-         (headers `(("User-Agent" ,#`"xsm.xml-rpc.client/,|*xml-rpc-version*|")
-                    ("Host" ,(sys-gethostname))
+         (headers `(("Host" ,(host-of client))
+                    ("User-Agent" ,#`"xsm.xml-rpc.client/,|*xml-rpc-version*|")
                     ("Content-Type" "text/xml")
                     ("Content-Length" ,(number->string (string-size body))))))
     (dynamic-wind
