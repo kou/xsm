@@ -205,4 +205,29 @@
 </struct></value>
 </param>
 </params>
-</methodResponse>") '())))))
+</methodResponse>") '()))))
+  
+  ("parse-method-name test"
+   (assert-equal "add"
+                 (parse-method-name '(methodName "add"))))
+  ("parse-method-call test"
+   (assert-values-equal
+    '("add" (1 -2 3.0))
+    (lambda ()
+      (parse-method-call '(methodCall
+                           (methodName "add")
+                           (params
+                            (param (value (int "1")))
+                            (param (value (int "-2")))
+                            (param (value (double "3.0")))))))))
+  ("parse-request test"
+   (assert-values-equal
+    '("add" (1 -2 3.0))
+    (lambda ()
+      (parse-request '(*TOP*
+                       (methodCall
+                        (methodName "add")
+                        (params
+                         (param (value (int "1")))
+                         (param (value (int "-2")))
+                         (param (value (double "3.0")))))))))))

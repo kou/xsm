@@ -1,5 +1,6 @@
 #!/usr/local/bin/gosh
 
+(add-load-path "/home/kou/local/share/gauche/site/lib/")
 (use xsm.xml-rpc.server.cgi)
 
 (define (main args)
