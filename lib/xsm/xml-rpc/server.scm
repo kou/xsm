@@ -9,8 +9,7 @@
   (use gauche.net)
   (use xsm.xml-rpc.marshal)
   (use xsm.xml-rpc.http)
-  (export make-xml-rpc-server
-          xml-rpc-server-call call))
+  (export make-mount-table))
 (select-module xsm.xml-rpc.server)
 
 (define-class <xml-rpc-server-mount-table> ()
@@ -18,6 +17,14 @@
 
 (define (mount mount-table name value)
   (hash-table-put! (table-of mount-table) name value))
+
+(define (make-mount-table bindings)
+  (let ((mount-table (make <xml-rpc-server-mount-table>)))
+    (let loop ((bindings bindings))
+      (unless (null? bindings)
+        (apply mount mount-table (car bindings))
+        (loop (cdr bindings))))
+    mount-table))
 
 (define (handle-request mount-table name . args)
   (with-error-handler
@@ -28,27 +35,6 @@
       (make-success-response
        (apply (hash-table-get (table-of mount-table) name)
               args)))))
-
-(define-class <xml-rpc-server> ()
-  ((host :accessor host-of :init-keyword :host)
-   (port :accessor port-of :init-keyword :port)
-   (path :accessor path-of :init-keyword :path)
-   (timeout :accessor timeout-of :init-keyword :timeout)))
-
-(define (make-xml-rpc-server uri . keywords)
-  (receive (scheme user-info host port path query fragment)
-      (uri-parse uri)
-    (unless (eq? 'http scheme)
-      (errorf "not supported scheme: <~a>" scheme))
-    (unless host
-      (errorf "host does not specified"))
-    (unless path
-      (errorf "path does not specified"))
-    (make <xml-rpc-server>
-      :host host
-      :port (or port 80)
-      :path path
-      :timeout (get-keyword :timeout keywords '(0 500000)))))
 
 (define (make-response content)
   (call-with-output-string
@@ -71,6 +57,6 @@
   (make-response 
    `(fault
      ,(marshal-value (alist->hash-table `((faultCode . ,code)
-                                          (faultString . phrase)))))))
+                                          (faultString . ,phrase)))))))
 
 (provide "xsm/xml-rpc/server")

@@ -1,6 +1,5 @@
-#!/usr/bin/env gosh
+#!/usr/local/bin/gosh
 
-(use rfc.uri)
 (use xsm.xml-rpc.server.cgi)
 
 (define (main args)

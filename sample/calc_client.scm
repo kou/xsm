@@ -13,4 +13,5 @@
     (print (xml-rpc-client-call server "calc.add" 1 2))
     (print (call server "calc.sub" 1 2))
     (print (xml-rpc-client-call server "calc.multi" 1.0 2.0))
-    (print (call server "calc.div" 1.0 2.0))))
+    (print (call server "calc.div" 1.0 2.0))
+    '(print (call server "countup"))))

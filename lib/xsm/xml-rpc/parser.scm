@@ -4,7 +4,7 @@
   (use util.record)
   (use rfc.base64)
   (use sxml.tools)
-  (export parse-response))
+  (export parse-response parse-request))
 (select-module xsm.xml-rpc.parser)
 
 (define (first-content contents converter)
@@ -240,9 +240,9 @@
                   (handler content))
                 contents
                 (list (lambda (content)
-                        (parse-method-name (first-content content identity)))
+                        (parse-method-name content))
                       (lambda (content)
-                        (parse-params (first-content content identity)))
+                        (parse-params content))
                       (lambda (content)
                         (errorf "too many content <~a>" content)))))))
 

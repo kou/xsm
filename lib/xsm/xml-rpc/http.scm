@@ -3,12 +3,14 @@
   (use text.tr)
   (use util.list)
   (use sxml.ssax)
+  (use www.cgi)
   (use gauche.version)
   (use gauche.charconv)
   (use gauche.selector)
   (use xsm.xml-rpc.parser)
   (export http-request http-response-parse
-          http-response http-request-parse))
+          http-response http-request-parse
+          http-error? code-of phrase-of))
 (select-module xsm.xml-rpc.http)
 
 (define-class <xml-rpc-http-error> (<exception>)
@@ -20,6 +22,9 @@
 (define-class <http-error> (<xml-rpc-http-error>)
   ((code :accessor code-of :init-keyword :code)
    (phrase :accessor phrase-of :init-keyword :phrase)))
+
+(define (http-error? obj)
+  (is-a? obj <http-error>))
 
 (define-class <invalid-content-type> (<xml-rpc-http-error>)
   ((content-type :accessor content-type :init-keyword :content-type)))
@@ -93,6 +98,7 @@
                    (version<=? version "1.1"))
         (raise (make <not-supported-http-version> :version version)))
       (unless (= 200 (string->number code))
+        (print (list (string->number code) phrase))
         (raise (make <http-error>
                  :code (string->number code)
                  :phrase phrase)))))
@@ -154,13 +160,13 @@
   (flush output))
 
 (define (http-request-parse input)
-  (unless (equal? "POST" (sys-getenv "REQUEST_METHOD"))
-    (error "405: Method Not Allowed"))
-  (unless (equal? "text/xml" (sys-getenv "CONTENT_TYPE"))
-    (error "400: Bad Request"))
-  (let ((length (x->number (sys-getenv "CONTENT_LENGTH"))))
+  (unless (equal? "POST" (cgi-get-metavariable "REQUEST_METHOD"))
+    (raise (make <http-error> :code 405 :phrase "Method Not Allowed")))
+  (unless (equal? "text/xml" (cgi-get-metavariable "CONTENT_TYPE"))
+    (raise (make <http-error> :code 400 :phrase "Bad Request")))
+  (let ((length (x->number (cgi-get-metavariable "CONTENT_LENGTH"))))
     (unless (< 0 length)
-      (error "411: Length Required"))
+      (raise (make <http-error> :code 411 :phrase "Length Required")))
     (http-request-body-parse input length)))
 
 (define (http-request-body-parse input length)
