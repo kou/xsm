@@ -2,20 +2,14 @@
 
 (define-module xml-rpc-server-test
   (use test.unit)
-  (use sxml.ssax)
+  (use util.list)
   (extend xsm.xml-rpc.server))
 (select-module xml-rpc-server-test)
 
-'(define-test-case "XML-RPC client test"
-  ("make-request test"
-   (assert-equal `(*TOP*
-                   (*PI* xml ,#`"version=\"1.0\" encoding=\",(gauche-character-encoding)\"")
-                   (methodCall
-                    (methodName "examples.getStateName")
-                    (params
-                     (param (value (int "41")))
-                     (param (value (double "-41.41"))))))
-                 (ssax:xml->sxml
-                  (open-input-string
-                   (make-request "examples.getStateName" 41 -41.41))
-                  '()))))
+(define-test-case "XML-RPC server test"
+  ("make-mount-point test"
+   (assert-lset-equal '(("a" . b) ("b" . c) ("c" . d))
+                      (hash-table->alist
+                       (table-of
+                        (make-mount-table
+                         '(("a" b) ("b" c) ("c" d))))))))

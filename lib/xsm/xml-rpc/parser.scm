@@ -191,25 +191,9 @@
     (errorf "must be single <params> element, but <~s>" params))
   (map parse-param (sxml:content params)))
 
-;;; struct->record version
-(define (parse-fault fault)
-  (unless (eq? 'fault (sxml:element-name fault))
-    (errorf "must be single <fault> element, but <~s>" fault))
-  (let ((fault-info (parse-value (first-content (sxml:content fault)
-                                                identity))))
-    (errorf "XML-RPC FAULT: code=~a; string=~a"
-            (ref fault-info 'faultCode)
-            (ref fault-info 'faultString))))
-
-;;; struct->hash version
-(define (parse-fault fault)
-  (unless (eq? 'fault (sxml:element-name fault))
-    (errorf "must be single <fault> element, but <~s>" fault))
-  (let ((fault-info (parse-value (first-content (sxml:content fault)
-                                                identity))))
-    (errorf "XML-RPC FAULT: code=~a; string=~a"
-            (hash-table-get fault-info 'faultCode)
-            (hash-table-get fault-info 'faultString))))
+;;; client side
+(define (parse-response sxml)
+  (parse-method-response (first-content (sxml:content sxml) identity)))
 
 (define (parse-method-response response)
   (unless (eq? 'methodResponse (sxml:element-name response))
@@ -222,9 +206,16 @@
       (else (errorf "unknown subelement of <methodResponse>: <~a>"
                     name)))))
 
-(define (parse-response sxml)
-  (parse-method-response (first-content (sxml:content sxml) identity)))
+(define (parse-fault fault)
+  (unless (eq? 'fault (sxml:element-name fault))
+    (errorf "must be single <fault> element, but <~s>" fault))
+  (let ((fault-info (parse-value (first-content (sxml:content fault)
+                                                identity))))
+    (errorf "XML-RPC FAULT: code=~a; string=~a"
+            (hash-table-get fault-info 'faultCode)
+            (hash-table-get fault-info 'faultString))))
 
+;;; server side
 (define (parse-request sxml)
   (parse-method-call (first-content (sxml:content sxml) identity)))
   

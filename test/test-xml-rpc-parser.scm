@@ -118,18 +118,18 @@
                                (value (int "4")))
                        (member (name "faultString")
                                (value (string "Too many parameters."))))))))))
-  ("parse-response test"
+  ("parse-method-response test"
    (assert-values-equal
     '("South Dakota")
     (lambda ()
-      (parse-response '(methodResponse
+      (parse-method-response '(methodResponse
                         (params
                          (param
                           (value (string "South Dakota"))))))))
    (assert-error-message
     "XML-RPC FAULT: code=4; string=Too many parameters."
     (lambda ()
-      (parse-response
+      (parse-method-response
        '(methodResponse
          (fault
           (value
@@ -138,11 +138,11 @@
                     (value (int "4")))
             (member (name "faultString")
                     (value (string "Too many parameters.")))))))))))
-  ("parse-method-response test"
+  ("parse-response test"
    (assert-values-equal
     '("South Dakota")
     (lambda ()
-      (parse-method-response
+      (parse-response
        '(*TOP*
          (methodResponse
           (params
@@ -151,7 +151,7 @@
    (assert-error-message
     "XML-RPC FAULT: code=4; string=Too many parameters."
     (lambda ()
-      (parse-method-response
+      (parse-response
        '(*TOP*
          (methodResponse
           (fault
@@ -163,7 +163,7 @@
                      (value (string "Too many parameters.")))))))))))
    (assert-struct
     '((mode 2) (players (1 2 3)) (width 17) (height 21) (turn_id "1") (cur_player "2") (next_turn ""))
-    (parse-method-response
+    (parse-response
      (ssax:xml->sxml
       (open-input-string "<?xml version=\"1.0\"?>
 <!-- DEBUG INFO:

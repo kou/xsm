@@ -81,6 +81,43 @@
     
   (read-more-if-need (more-read size)))
 
+(define (xml-encoding str)
+  (let ((md (#/^\s*<\?xml\s*.*\s*encoding=['\"]([^'\"]+)['\"].*\s*\?>/ str)))
+    (and md (md 1))))
+    
+(define (xml-read input length)
+  (let* ((block (read-required-block input length
+                                     (lambda ()
+                                       (error "content is too short"))))
+         (encoding (xml-encoding (read-line (open-input-string block)))))
+    (ces-convert block encoding)))
+
+
+;;; client side
+(define (http-request path headers body output)
+  (format output "POST ~a HTTP/1.1\r\n" path)
+  (for-each (lambda (header)
+              (apply format output "~a: ~a\r\n" header))
+            headers)
+  (format output "\r\n")
+  (format output "~a" body)
+  (flush output))
+
+(define (http-response-parse input)
+  (http-response-body-parse input
+                            (http-response-header-parse input)))
+
+(define (http-response-header-parse input)
+  (let* ((alist (http-response-header-read input))
+         (content-type (assoc-ref alist "CONTENT_TYPE"))
+         (content-length (assoc-ref alist "CONTENT_LENGTH")))
+    (unless (equal? "text/xml" content-type)
+      (raise (make <invalid-content-type> :content-type content-type)))
+    (unless (and content-length (string->number content-length))
+      (raise (make <invalid-content-length> :content-length content-length)))
+
+    (string->number content-length)))
+
 (define (http-response-header-read input)
   (define counter 3)
   (define (next-line)
@@ -98,7 +135,7 @@
                    (version<=? version "1.1"))
         (raise (make <not-supported-http-version> :version version)))
       (unless (= 200 (string->number code))
-        (print (list (string->number code) phrase))
+        ;; (print (list (string->number code) phrase))
         (raise (make <http-error>
                  :code (string->number code)
                  :phrase phrase)))))
@@ -117,40 +154,12 @@
                        result)
                  (next-line))))))
 
-(define (http-response-header-parse input)
-  (let* ((alist (http-response-header-read input))
-         (content-type (assoc-ref alist "CONTENT_TYPE"))
-         (content-length (assoc-ref alist "CONTENT_LENGTH")))
-    (unless (equal? "text/xml" content-type)
-      (raise (make <invalid-content-type> :content-type content-type)))
-    (unless (and content-length (string->number content-length))
-      (raise (make <invalid-content-length> :content-length content-length)))
-
-    (string->number content-length)))
-
-(define (xml-encoding str)
-  (let ((md (#/^\s*<\?xml\s*.*\s*encoding=['\"]([^'\"]+)['\"].*\s*\?>/ str)))
-    (and md (md 1))))
-    
-
 (define (http-response-body-parse input length)
   (let ((body (xml-read input length)))
     ;; (print body)
     (parse-response (ssax:xml->sxml (open-input-string body) '()))))
 
-(define (http-response-parse input)
-  (http-response-body-parse input
-                            (http-response-header-parse input)))
-
-(define (http-request path headers body output)
-  (format output "POST ~a HTTP/1.1\r\n" path)
-  (for-each (lambda (header)
-              (apply format output "~a: ~a\r\n" header))
-            headers)
-  (format output "\r\n")
-  (format output "~a" body)
-  (flush output))
-
+;;; server side
 (define (http-response headers body output)
   (for-each (lambda (header)
               (apply format output "~a: ~a\r\n" header))
@@ -172,12 +181,5 @@
 (define (http-request-body-parse input length)
   (let ((body (xml-read input length)))
     (parse-request (ssax:xml->sxml (open-input-string body) '()))))
-
-(define (xml-read input length)
-  (let* ((block (read-required-block input length
-                                     (lambda ()
-                                       (error "content is too short"))))
-         (encoding (xml-encoding (read-line (open-input-string block)))))
-    (ces-convert block encoding)))
 
 (provide "xsm/xml-rpc/http")
