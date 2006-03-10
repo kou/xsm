@@ -51,13 +51,16 @@
 
 (define (xml-rpc-client-call client name . args)
   (let* ((socket (make-client-socket 'inet (host-of client) (port-of client)))
-         (charset (symbol->string (gauche-character-encoding)))
          (in (socket-input-port socket))
          (out (socket-output-port socket))
-         (body (apply make-request name charset args))
+         (body (apply make-request name
+                      (if (and (not (null? args))
+                               (equal? :encoding (car args)))
+                        (cdr args)
+                        (cons (gauche-character-encoding) args))))
          (headers `(("Host" ,(host-of client))
                     ("User-Agent" ,#`"xsm.xml-rpc.client/,|*xml-rpc-version*|")
-                    ("Content-Type" "text/xml; charset=,|charset|")
+                    ("Content-Type" "text/xml")
                     ("Content-Length" ,(number->string (string-size body))))))
     (dynamic-wind
         (lambda () #f)
