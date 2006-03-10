@@ -33,7 +33,7 @@
       :path path
       :timeout (get-keyword :timeout keywords '(0 500000)))))
 
-(define (make-request name . args)
+(define (make-request name encoding . args)
   (call-with-output-string
     (lambda (output)
       (sxml->xml
@@ -41,7 +41,7 @@
        `(*TOP*
          (*PI* xml
                ("version" "1.0")
-               ("encoding" ,(symbol->string (gauche-character-encoding))))
+               ("encoding" ,encoding))
          (methodCall
           (methodName ,(x->string name))
           (params ,@(map (lambda (arg)
@@ -51,12 +51,13 @@
 
 (define (xml-rpc-client-call client name . args)
   (let* ((socket (make-client-socket 'inet (host-of client) (port-of client)))
+         (charset (symbol->string (gauche-character-encoding)))
          (in (socket-input-port socket))
          (out (socket-output-port socket))
-         (body (apply make-request name args))
+         (body (apply make-request name charset args))
          (headers `(("Host" ,(host-of client))
                     ("User-Agent" ,#`"xsm.xml-rpc.client/,|*xml-rpc-version*|")
-                    ("Content-Type" "text/xml")
+                    ("Content-Type" "text/xml; charset=,|charset|")
                     ("Content-Length" ,(number->string (string-size body))))))
     (dynamic-wind
         (lambda () #f)

@@ -72,25 +72,32 @@
                   "\n"))))
   
   ("http-response-header-parse test"
-   (assert-equal 159
-                 (%http-response-header-parse
-                  (string-join (list "HTTP/1.1 200 OK"
-                                     "Connection: close"
-                                     "Content-Length: 159"
-                                     "Content-Type: text/xml"
-                                     "Date: Fri, 17 Jul 1998 19:55:08 GMT"
-                                     "Server: UserLand Frontier/5.1.2-WinNT")
+   (for-each (lambda (content-type)
+               (let* ((content-length 159)
+                      (header (string-join
+                               `("HTTP/1.1 200 OK"
+                                 "Connection: close"
+                                 ,#`"Content-Length: ,|content-length|"
+                                 ,#`"Content-Type: ,|content-type|"
+                                 "Date: Fri, 17 Jul 1998 19:55:08 GMT"
+                                 "Server: UserLand Frontier/5.1.2-WinNT")
                                "\n")))
+                 (assert-equal content-length
+                               (%http-response-header-parse header))))
+             '("text/xml"
+               "text/xml; charset=utf-8"
+               "application/xml"
+               "application/xml; charset=UTF-8"))
    (assert-raise
     <invalid-content-type>
     (lambda ()
       (%http-response-header-parse
        (string-join (list "HTTP/1.1 200 OK"
-                        "Connection: close"
-                        "Content-Length: 158"
-                        "Content-Type: text/xml; charset=UTF-8"
-                        "Date: Fri, 17 Jul 1998 19:55:08 GMT"
-                        "Server: UserLand Frontier/5.1.2-WinNT")
+                          "Connection: close"
+                          "Content-Length: 158"
+                          "Content-Type: text/html"
+                          "Date: Fri, 17 Jul 1998 19:55:08 GMT"
+                          "Server: UserLand Frontier/5.1.2-WinNT")
                     "\n"))))
    (assert-raise
     <invalid-content-length>
@@ -232,6 +239,13 @@ Content-length: ,(string-size xml)\r
                         (parameterize ((cgi-metavariables
                                         '(("REQUEST_METHOD" "POST"))))
                           (http-request-parse (open-input-string "")))))
+   (assert-http-error 400 "Bad Request"
+                      (lambda ()
+                        (parameterize ((cgi-metavariables
+                                        '(("REQUEST_METHOD" "POST")
+                                          ("CONTENT_TYPE" "text/html")
+                                          ("CONTENT_LENGTH" 0))))
+                          (http-request-parse (open-input-string "")))))
    (assert-http-error 411 "Length Required"
                       (lambda ()
                         (parameterize ((cgi-metavariables
@@ -239,10 +253,7 @@ Content-length: ,(string-size xml)\r
                                           ("CONTENT_TYPE" "text/xml")
                                           ("CONTENT_LENGTH" 0))))
                           (http-request-parse (open-input-string "")))))
-   (assert-values-equal
-    '("add" (1 -2 3.0))
-    (lambda ()
-      (let ((xml "
+   (let ((xml "
 <methodCall>
   <methodName>add</methodName>
   <params>
@@ -257,11 +268,19 @@ Content-length: ,(string-size xml)\r
       </param>
     </params>
   </methodCall>"))
-        (parameterize ((cgi-metavariables
-                        `(("REQUEST_METHOD" "POST")
-                          ("CONTENT_TYPE" "text/xml")
-                          ("CONTENT_LENGTH" ,(string-size xml)))))
-          (http-request-parse (open-input-string xml)))))))
+     (for-each (lambda (content-type)
+                 (assert-values-equal
+                  '("add" (1 -2 3.0))
+                  (lambda ()
+                    (parameterize ((cgi-metavariables
+                                    `(("REQUEST_METHOD" "POST")
+                                      ("CONTENT_TYPE" ,content-type)
+                                      ("CONTENT_LENGTH" ,(string-size xml)))))
+                      (http-request-parse (open-input-string xml))))))
+               '("text/xml"
+                 "text/xml; charset=utf8"
+                 "application/xml"
+                 "application/xml; charset=utf8"))))
   ("http-response test"
    (let ((xml (tree->string
                (sxml:sxml->xml

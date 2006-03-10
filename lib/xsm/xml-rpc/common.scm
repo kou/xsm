@@ -18,7 +18,7 @@
 
   (define (convert-if-not-false obj converter)
     (and obj (converter obj)))
-  
+
   (receive (scheme specific)
       (uri-scheme&specific uri)
     (receive (authority path query fragment)

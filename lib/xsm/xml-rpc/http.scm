@@ -13,6 +13,9 @@
           http-error? code-of phrase-of))
 (select-module xsm.xml-rpc.http)
 
+(define content-type-regexp
+  #/^(text|application)\/xml(\;\s*charset=[a-zA-Z0-9\-_]+)?\s*$/)
+
 (define-class <xml-rpc-http-error> (<exception>)
   ())
 
@@ -61,7 +64,7 @@
                          (if (< retry-count 0)
                            (error "not response")
                            (retry)))))
-  
+
   (define (make-reader size)
     (lambda (in . args)
       (read-block size in)))
@@ -78,13 +81,13 @@
           (else
            '(debug (list "got block" block))
            block)))
-    
+
   (read-more-if-need (more-read size)))
 
 (define (xml-encoding str)
   (let ((md (#/^\s*<\?xml\s*.*\s*encoding=['\"]([^'\"]+)['\"].*\s*\?>/ str)))
     (and md (md 1))))
-    
+
 (define (xml-read input length)
   (let* ((block (read-required-block input length
                                      (lambda ()
@@ -111,7 +114,7 @@
   (let* ((alist (http-response-header-read input))
          (content-type (assoc-ref alist "CONTENT_TYPE"))
          (content-length (assoc-ref alist "CONTENT_LENGTH")))
-    (unless (equal? "text/xml" content-type)
+    (unless (content-type-regexp (or content-type ""))
       (raise (make <invalid-content-type> :content-type content-type)))
     (unless (and content-length (string->number content-length))
       (raise (make <invalid-content-length> :content-length content-length)))
@@ -139,7 +142,7 @@
         (raise (make <http-error>
                  :code (string->number code)
                  :phrase phrase)))))
-  
+
   (let loop ((result '())
              (line (next-line)))
     (cond ((or (eof-object? line)
@@ -171,8 +174,7 @@
 (define (http-request-parse input)
   (unless (equal? "POST" (cgi-get-metavariable "REQUEST_METHOD"))
     (raise (make <http-error> :code 405 :phrase "Method Not Allowed")))
-  (unless (#/^(text|application)\/xml$/
-              (or (cgi-get-metavariable "CONTENT_TYPE") ""))
+  (unless (content-type-regexp (or (cgi-get-metavariable "CONTENT_TYPE") ""))
     (raise (make <http-error> :code 400 :phrase "Bad Request")))
   (let ((length (x->number (cgi-get-metavariable "CONTENT_LENGTH"))))
     (unless (< 0 length)
