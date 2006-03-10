@@ -3,6 +3,6 @@
   (export *xml-rpc-version*))
 (select-module xsm.xml-rpc)
 
-(define *xml-rpc-version* "0.0.3")
+(define *xml-rpc-version* "0.0.4")
 
 (provide "xsm/xml-rpc")
