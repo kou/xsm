@@ -10,7 +10,7 @@
 (define (first-content contents converter)
   (define (invalid)
     (errorf "invalid content <~a>" contents))
-  
+
   (if contents
     (cond ((and (pair? contents)
                 (null? (cdr contents)))
@@ -120,7 +120,7 @@
          (rtd (make-record-type #`"xr-struct-,(gensym)" names)))
     (set! (value-of self)
           (apply (record-constructor rtd names) values))))
-  
+
 ;;; for struct->hash version
 (define-method initialize ((self <xr-struct>) args)
   (next-method)
@@ -143,7 +143,7 @@
     (or (and-let* (((pair? data))
                    ((null? (cdr data)))
                    (data (car data))
-                   (eq? 'data (sxml:element-name data)))
+                   ((eq? 'data (sxml:element-name data))))
           (set! (value-of self)
                 (map parse-value (sxml:content data))))
         (errorf "subelement of <array> is must be one <data> element, but <~a>"
@@ -218,7 +218,7 @@
 ;;; server side
 (define (parse-request sxml)
   (parse-method-call (first-content (sxml:content sxml) identity)))
-  
+
 (define (parse-method-call request)
   (unless (eq? 'methodCall (sxml:element-name request))
     (errorf "must be single <methodCall> element, but <~s>" request))

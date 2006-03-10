@@ -68,7 +68,7 @@ bellow.
 
 : base64
    ((|<string>|))
-   
+
    If you want to map object of Scheme to object of XML-RPC
    that have type base64, convert strings to ((|<base64>|))
    class by procedure (({make-base64-encoded-string})).
@@ -78,3 +78,7 @@ bellow.
 
 : array
    ((|<list>|))
+
+== Thanks
+
+  * yamada: He reports some bugs with patches to fix the bug.

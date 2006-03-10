@@ -171,7 +171,8 @@
 (define (http-request-parse input)
   (unless (equal? "POST" (cgi-get-metavariable "REQUEST_METHOD"))
     (raise (make <http-error> :code 405 :phrase "Method Not Allowed")))
-  (unless (equal? "text/xml" (cgi-get-metavariable "CONTENT_TYPE"))
+  (unless (#/^(text|application)\/xml$/
+              (or (cgi-get-metavariable "CONTENT_TYPE") ""))
     (raise (make <http-error> :code 400 :phrase "Bad Request")))
   (let ((length (x->number (cgi-get-metavariable "CONTENT_LENGTH"))))
     (unless (< 0 length)
